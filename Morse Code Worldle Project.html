@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Morse Code Trainer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      background: #000000;
+      color: #ffffff;
+      font-family: Arial, sans-serif;
+      padding: 12px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 1100px;
+      background: #0f172a;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 32px;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+
+    .level-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      background: #020617;
+      border: 1px solid #334155;
+      margin-bottom: 24px;
+      color: #e2e8f0;
+      font-weight: bold;
+      flex-wrap: wrap;
+    }
+
+    select {
+      background: #020617;
+      color: white;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+      text-align: left;
+      color: #e2e8f0;
+    }
+
+    .controls input {
+      width: 100%;
+    }
+
+    .button-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    button {
+      min-height: 46px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button.secondary {
+      border: 1px solid #334155;
+      background: #1e293b;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 18px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      min-width: max-content;
+    }
+
+    .group {
+      display: grid;
+      grid-template-columns: repeat(5, 48px);
+      gap: 8px;
+      margin-right: 10px;
+    }
+
+    .cell {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      text-transform: uppercase;
+      outline: none;
+      caret-color: transparent;
+      background: #000000;
+      border: 2px solid #334155;
+      color: #ffffff;
+      -webkit-appearance: none;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    .cell:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 10px #60a5fa;
+    }
+
+    .cell.active {
+      border: 2px solid #60a5fa;
+      box-shadow: 0 0 10px #60a5fa;
+    }
+
+    .cell.correct {
+      background: #16a34a;
+      border: 2px solid #22c55e;
+    }
+
+    .message {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      font-weight: bold;
+      display: none;
+    }
+
+    .message.correct-msg {
+      display: block;
+      background: #14532d;
+      color: #dcfce7;
+    }
+
+    .message.wrong-msg {
+      display: block;
+      background: #7f1d1d;
+      color: #fee2e2;
+    }
+
+    .message.neutral-msg {
+      display: block;
+      background: #1e293b;
+      color: #e2e8f0;
+    }
+
+    .answer-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      background: #1e293b;
+      display: none;
+    }
+
+    .answer-title {
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+
+    .answer {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 6px;
+      word-break: break-word;
+    }
+
+    .morse {
+      font-family: monospace;
+      font-size: 18px;
+      color: #e2e8f0;
+      word-break: break-word;
+      margin-top: 8px;
+    }
+
+    .check-button {
+      width: 100%;
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 16px;
+        border-radius: 16px;
+      }
+
+      h1 {
+        font-size: 26px;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .level-bar {
+        justify-content: center;
+      }
+
+      .button-row {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .group {
+        grid-template-columns: repeat(5, 40px);
+        gap: 6px;
+        margin-right: 8px;
+      }
+
+      .cell {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .button-row {
+        grid-template-columns: 1fr;
+      }
+
+      .group {
+        grid-template-columns: repeat(5, 34px);
+        gap: 5px;
+      }
+
+      .cell {
+        width: 34px;
+        height: 34px;
+        font-size: 17px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Morse Code Trainer</h1>
+    <p class="subtitle">Listen to the Morse groups. Select the level you want to practise.</p>
+
+    <div class="level-bar">
+      <span>Level</span>
+      <select id="levelSelect">
+        <option value="1">Level 1</option>
+        <option value="2">Level 2</option>
+        <option value="3">Level 3</option>
+        <option value="4">Level 4</option>
+        <option value="5">Level 5</option>
+      </select>
+      <span id="groupInfo">1 group × 5</span>
+      <span>Mode</span>
+      <select id="modeSelect">
+        <option value="random" selected>Random</option>
+        <option value="letters">Letters</option>
+        <option value="numbers">Numbers</option>
+      </select>
+    </div>
+
+    <div class="controls">
+      <label>
+        Speed: <span id="wpmValue">8</span> WPM
+        <input id="wpmInput" type="range" min="5" max="35" value="8" />
+      </label>
+
+      <label>
+        Pitch: <span id="frequencyValue">600</span> Hz
+        <input id="frequencyInput" type="range" min="500" max="900" step="25" value="600" />
+      </label>
+    </div>
+
+    <div class="button-row">
+      <button id="playButton">Play Morse</button>
+      <button id="stopButton" class="secondary">Stop</button>
+      <button id="newRoundButton" class="secondary">New Round</button>
+      <button id="showAnswerButton" class="secondary">Show Answer</button>
+    </div>
+
+    <div id="grid" class="grid"></div>
+
+    <button id="checkButton" class="check-button">Check Answer</button>
+
+    <div id="message" class="message"></div>
+
+    <div id="answerBox" class="answer-box">
+      <div class="answer-title">Current answer</div>
+      <div id="answerText" class="answer"></div>
+      <div id="morseText" class="morse"></div>
+    </div>
+  </main>
+
+  <script>
+    const MORSE = {
+      A: ".-", B: "-...", C: "-.-.", D: "-..", E: ".", F: "..-.", G: "--.", H: "....", I: "..", J: ".---",
+      K: "-.-", L: ".-..", M: "--", N: "-.", O: "---", P: ".--.", Q: "--.-", R: ".-.", S: "...", T: "-",
+      U: "..-", V: "...-", W: ".--", X: "-..-", Y: "-.--", Z: "--..",
+      0: "-----", 1: ".----", 2: "..---", 3: "...--", 4: "....-", 5: ".....", 6: "-....", 7: "--...", 8: "---..", 9: "----."
+    };
+
+    const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const NUMBERS = "0123456789";
+    const GROUP_LENGTH = 5;
+    const MAX_TRIES = 3;
+    const MAX_LEVEL = 5;
+
+    let level = 1;
+    let targetGroups = [];
+    let guesses = [];
+    let currentRow = 0;
+    let currentCol = 0;
+    let submittedRows = [];
+    let result = null;
+    let showAnswer = false;
+    let wpm = 8;
+    let frequency = 600;
+    let mode = "random"; // random | letters | numbers
+
+    let audioContext = null;
+    let timeoutId = null;
+    let activeNodes = [];
+
+    const levelSelect = document.getElementById("levelSelect");
+    const modeSelect = document.getElementById("modeSelect");
+    const groupInfo = document.getElementById("groupInfo");
+    const wpmInput = document.getElementById("wpmInput");
+    const wpmValue = document.getElementById("wpmValue");
+    const frequencyInput = document.getElementById("frequencyInput");
+    const frequencyValue = document.getElementById("frequencyValue");
+    const playButton = document.getElementById("playButton");
+    const stopButton = document.getElementById("stopButton");
+    const newRoundButton = document.getElementById("newRoundButton");
+    const showAnswerButton = document.getElementById("showAnswerButton");
+    const checkButton = document.getElementById("checkButton");
+    const grid = document.getElementById("grid");
+    const message = document.getElementById("message");
+    const answerBox = document.getElementById("answerBox");
+    const answerText = document.getElementById("answerText");
+    const morseText = document.getElementById("morseText");
+
+    function generateSingleGroup(source,length = GROUP_LENGTH) {
+
+      let output = "";
+
+      for (let i = 0; i < length; i++) {
+        output += source[Math.floor(Math.random() * source.length)];
+      }
+
+      return output;
+    }
+
+    function pickSource() {
+      if (mode === "letters") return LETTERS;
+      if (mode === "numbers") return NUMBERS;
+      // random
+      return Math.random() < 0.5 ? LETTERS : NUMBERS;
+    }
+
+    function generateGroups(selectedLevel) {
+      const source = pickSource();
+      return Array.from({ length: selectedLevel }, () => generateSingleGroup(source));
+    }
+
+    function makeEmptyGrid(selectedLevel) {
+      return Array.from({ length: MAX_TRIES }, () => Array(selectedLevel * GROUP_LENGTH).fill(""));
+    }
+
+    function getTarget() {
+      return targetGroups.join("");
+    }
+
+    function getTotalLength() {
+      return level * GROUP_LENGTH;
+    }
+
+    function getMorseText() {
+      return targetGroups
+        .map(group => group.split("").map(char => MORSE[char]).join("   "))
+        .join("       ");
+    }
+
+    function isGameOver() {
+      return result === "correct" || result === "failed" || result === "complete";
+    }
+
+    function renderGrid() {
+      grid.innerHTML = "";
+      const target = getTarget();
+
+      for (let rowIndex = 0; rowIndex < MAX_TRIES; rowIndex++) {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        for (let groupIndex = 0; groupIndex < level; groupIndex++) {
+          const group = document.createElement("div");
+          group.className = "group";
+
+          for (let indexInGroup = 0; indexInGroup < GROUP_LENGTH; indexInGroup++) {
+            const colIndex = groupIndex * GROUP_LENGTH + indexInGroup;
+            const input = document.createElement("input");
+            input.className = "cell";
+            input.value = guesses[rowIndex][colIndex] || "";
+            input.maxLength = 1;
+            input.autocomplete = "off";
+            input.autocapitalize = "characters";
+            input.spellcheck = false;
+            input.inputMode = mode === "numbers" ? "numeric" : "text";
+            input.dataset.row = rowIndex;
+            input.dataset.col = colIndex;
+
+            const isSubmitted = submittedRows.includes(rowIndex);
+            const isCorrect = isSubmitted && guesses[rowIndex][colIndex] === target[colIndex];
+            const isActive = rowIndex === currentRow && colIndex === currentCol && !isGameOver() && !isSubmitted;
+
+            if (isCorrect) input.classList.add("correct");
+            if (isActive) input.classList.add("active");
+
+            input.disabled = isGameOver() || rowIndex !== currentRow || isSubmitted;
+
+            input.addEventListener("click", () => {
+              if (!isGameOver() && rowIndex === currentRow && !submittedRows.includes(rowIndex)) {
+                focusCell(rowIndex, colIndex);
+              }
+            });
+
+            input.addEventListener("input", handleInput);
+            input.addEventListener("keydown", handleKeyDown);
+
+            group.appendChild(input);
+          }
+
+          row.appendChild(group);
+        }
+
+        grid.appendChild(row);
+      }
+    }
+
+    function renderMessage() {
+      message.className = "message";
+      message.textContent = "";
+
+      if (result === null) return;
+
+      if (result === "correct") {
+        message.classList.add("correct-msg");
+        message.textContent = "Correct! Choose the next level when you are ready.";
+      } else if (result === "complete") {
+        message.classList.add("correct-msg");
+        message.textContent = "Complete! You cleared Level 5.";
+      } else if (result === "tryAgain") {
+        message.classList.add("neutral-msg");
+        message.textContent = `Try again. ${MAX_TRIES - currentRow} tries left.`;
+      } else if (result === "incomplete") {
+        message.classList.add("neutral-msg");
+        message.textContent = `Fill all ${getTotalLength()} squares before checking.`;
+      } else if (result === "failed") {
+        message.classList.add("wrong-msg");
+        message.textContent = `Failed. The answer was ${targetGroups.join(" ")}.`;
+      }
+    }
+
+    function renderAnswer() {
+      answerText.textContent = targetGroups.join(" ");
+      morseText.textContent = getMorseText();
+      answerBox.style.display = showAnswer ? "block" : "none";
+      showAnswerButton.textContent = showAnswer ? "Hide Answer" : "Show Answer";
+    }
+
+    function renderInfo() {
+      groupInfo.textContent = `${level} group${level > 1 ? "s" : ""} × 5`;
+      levelSelect.value = String(level);
+      modeSelect.value = mode;
+      wpmValue.textContent = String(wpm);
+      frequencyValue.textContent = String(frequency);
+    }
+
+    function render() {
+      renderInfo();
+      renderGrid();
+      renderMessage();
+      renderAnswer();
+    }
+
+    function focusCell(row, col) {
+      currentRow = row;
+      currentCol = col;
+      renderGrid();
+
+      const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+      if (cell) cell.focus();
+    }
+
+    function handleInput(event) {
+      const row = Number(event.target.dataset.row);
+      const col = Number(event.target.dataset.col);
+
+      if (isGameOver() || row !== currentRow || submittedRows.includes(row)) return;
+
+      const allowedPattern = mode === "numbers" ? /[^0-9]/g : mode === "letters" ? /[^A-Z]/g : /[^A-Z0-9]/g;
+      const char = event.target.value.toUpperCase().replace(allowedPattern, "").slice(-1);
+
+      guesses[row][col] = char;
+
+      if (char && col < getTotalLength() - 1) {
+        focusCell(row, col + 1);
+      } else {
+        renderGrid();
+        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (cell) cell.focus();
+      }
+    }
+
+    function handleKeyDown(event) {
+      const row = Number(event.target.dataset.row);
+      const col = Number(event.target.dataset.col);
+
+      if (isGameOver() || row !== currentRow || submittedRows.includes(row)) return;
+
+      const key = event.key;
+      const totalLength = getTotalLength();
+
+      if (key === "Enter") {
+        event.preventDefault();
+        checkAnswer();
+        return;
+      }
+
+      if (key === " ") {
+        event.preventDefault();
+        if (col < totalLength - 1) focusCell(row, col + 1);
+        return;
+      }
+
+      if (key === "Backspace" || key === "Delete") {
+        event.preventDefault();
+
+        if (guesses[row][col] !== "") {
+          guesses[row][col] = "";
+          focusCell(row, col);
+          return;
+        }
+
+        if (col > 0) {
+          guesses[row][col - 1] = "";
+          focusCell(row, col - 1);
+        }
+      }
+    }
+
+    function getAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      return audioContext;
+    }
+
+    function stopMorse() {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      activeNodes.forEach(node => {
+        try {
+          node.stop();
+        } catch (error) {
+          // Ignore already stopped nodes.
+        }
+      });
+
+      activeNodes = [];
+    }
+
+    function playBeep(ctx, startTime, durationMs) {
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const durationSec = durationMs / 1000;
+      const endTime = startTime + durationSec;
+      const attack = 0.006;
+      const release = 0.006;
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(frequency, startTime);
+
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(0.5, startTime + attack);
+      gain.gain.setValueAtTime(0.5, Math.max(startTime + attack, endTime - release));
+      gain.gain.linearRampToValueAtTime(0, endTime);
+
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+
+      oscillator.start(startTime);
+      oscillator.stop(endTime + 0.02);
+
+      activeNodes.push(oscillator);
+    }
+
+    async function playMorse() {
+      stopMorse();
+
+      const ctx = getAudioContext();
+      if (ctx.state === "suspended") await ctx.resume();
+
+      const dot = 1200 / wpm;
+      const dash = dot * 3;
+      const intraCharacterGap = dot;
+      const characterGap = dot * 3;
+      const groupGap = dot * 7;
+      const startDelay = 0.12;
+
+      let time = ctx.currentTime + startDelay;
+
+      targetGroups.forEach((group, groupIndex) => {
+        group.split("").forEach((char, charIndex) => {
+          const symbols = MORSE[char];
+
+          symbols.split("").forEach((symbol, symbolIndex) => {
+            const duration = symbol === "." ? dot : dash;
+            playBeep(ctx, time, duration);
+            time += duration / 1000;
+
+            if (symbolIndex < symbols.length - 1) {
+              time += intraCharacterGap / 1000;
+            }
+          });
+
+          if (charIndex < group.length - 1) {
+            time += characterGap / 1000;
+          }
+        });
+
+        if (groupIndex < targetGroups.length - 1) {
+          time += groupGap / 1000;
+        }
+      });
+
+      const totalDurationMs = Math.max(0, (time - ctx.currentTime) * 1000 + 100);
+      timeoutId = setTimeout(() => {
+        activeNodes = [];
+        timeoutId = null;
+      }, totalDurationMs);
+    }
+
+    function startLevel(nextLevel) {
+      stopMorse();
+      level = nextLevel;
+      targetGroups = generateGroups(level);
+      guesses = makeEmptyGrid(level);
+      currentRow = 0;
+      currentCol = 0;
+      submittedRows = [];
+      result = null;
+      showAnswer = false;
+      render();
+      setTimeout(() => focusCell(0, 0), 0);
+    }
+
+    function checkAnswer() {
+      if (isGameOver()) return;
+
+      const totalLength = getTotalLength();
+      const target = getTarget();
+      const guess = guesses[currentRow].join("").toUpperCase();
+
+      if (guess.length < totalLength || guesses[currentRow].some(cell => cell === "")) {
+        result = "incomplete";
+        render();
+        return;
+      }
+
+      submittedRows.push(currentRow);
+
+      if (guess === target) {
+        stopMorse();
+        result = level === MAX_LEVEL ? "complete" : "correct";
+        render();
+        return;
+      }
+
+      if (currentRow === MAX_TRIES - 1) {
+        result = "failed";
+        showAnswer = true;
+        stopMorse();
+        render();
+        return;
+      }
+
+      const nextRow = currentRow + 1;
+
+      for (let i = 0; i < totalLength; i++) {
+        if (guess[i] === target[i]) {
+          guesses[nextRow][i] = target[i];
+        }
+      }
+
+      result = "tryAgain";
+      currentRow = nextRow;
+      const firstEmptyCol = guesses[nextRow].findIndex(cell => cell === "");
+      currentCol = firstEmptyCol === -1 ? 0 : firstEmptyCol;
+      render();
+      setTimeout(() => focusCell(currentRow, currentCol), 0);
+    }
+
+    levelSelect.addEventListener("change", () => {
+      startLevel(Number(levelSelect.value));
+    });
+
+    modeSelect.addEventListener("change", () => {
+      mode = modeSelect.value;
+      startLevel(level); // regenerate with new mode
+    });
+
+    wpmInput.addEventListener("input", () => {
+      wpm = Number(wpmInput.value);
+      renderInfo();
+    });
+
+    frequencyInput.addEventListener("input", () => {
+      frequency = Number(frequencyInput.value);
+      renderInfo();
+    });
+
+    playButton.addEventListener("click", playMorse);
+    stopButton.addEventListener("click", stopMorse);
+    newRoundButton.addEventListener("click", () => startLevel(level));
+    showAnswerButton.addEventListener("click", () => {
+      showAnswer = !showAnswer;
+      renderAnswer();
+    });
+    checkButton.addEventListener("click", checkAnswer);
+
+    startLevel(1);
+  </script>
+</body>
+</html>
